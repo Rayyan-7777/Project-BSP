@@ -1,0 +1,6 @@
+# Ignore large datasets
+*.mat
+*.dat
+*.hea
+*.pyc
+__pycache__/

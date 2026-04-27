@@ -324,9 +324,17 @@ def interp_card(title: str, message: str) -> str:
 with st.sidebar:
     st.markdown("""
     <div style='text-align:center; padding: 10px 0 20px 0;'>
-        <div style='font-size:36px;'>🫀</div>
-        <div style='font-size:16px; font-weight:700; color:#f1f5f9;'>ECG-HRV Dashboard</div>
-        <div style='font-size:11px; color:#475569; margin-top:4px;'>BSP Lab OEL</div>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="url(#sidebar-grad)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;">
+            <defs>
+                <linearGradient id="sidebar-grad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#3b82f6"/>
+                    <stop offset="100%" stop-color="#8b5cf6"/>
+                </linearGradient>
+            </defs>
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        <div style='font-size:18px; font-weight:800; color:#f8fafc; letter-spacing: 0.5px;'>ECG-HRV Dashboard</div>
+        <div style='font-size:12px; font-weight:500; color:#64748b; margin-top:2px; letter-spacing: 1px; text-transform: uppercase;'>BSP Lab OEL</div>
     </div>
     """, unsafe_allow_html=True)
     st.divider()
@@ -431,9 +439,19 @@ with st.sidebar:
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="dashboard-header">
-    <div class="dashboard-title">🫀 ECG & HRV Analysis Dashboard</div>
+    <div class="dashboard-title">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="url(#main-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 12px; margin-bottom: 4px;">
+            <defs>
+                <linearGradient id="main-grad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#3b82f6"/>
+                    <stop offset="100%" stop-color="#06b6d4"/>
+                </linearGradient>
+            </defs>
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>ECG & HRV Analysis Dashboard
+    </div>
     <div class="dashboard-subtitle">
-        Biomedical Signal Processing Lab &nbsp;|&nbsp;
+        <span style="color:#60a5fa; font-weight: 500;">Biomedical Signal Processing Lab</span> &nbsp;|&nbsp;
         Time-Domain · Frequency-Domain · Non-Linear HRV Analysis &nbsp;|&nbsp;
         PhysioNet Compatible
     </div>

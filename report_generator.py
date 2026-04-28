@@ -106,6 +106,33 @@ def generate_pdf_report(metrics: dict, interpretations: dict, plots: dict, outpu
     story.append(fd_table)
     story.append(Spacer(1, 20))
     
+    # --- NON-LINEAR METRICS ---
+    story.append(Paragraph("Non-Linear HRV Metrics", heading_style))
+    
+    en_v = metrics.get('entropy_value', float('nan'))
+    en_str = f"{en_v:.4f}" if en_v is not None and not (isinstance(en_v, float) and en_v != en_v) else "N/A"
+    
+    nl_data = [
+        ['Metric', 'Value', 'Unit'],
+        ['SD1', f"{metrics.get('sd1_ms', 0):.2f}", 'ms'],
+        ['SD2', f"{metrics.get('sd2_ms', 0):.2f}", 'ms'],
+        ['SD1/SD2', f"{metrics.get('sd1_sd2_ratio', 0):.4f}", ''],
+        ['Ellipse Area', f"{metrics.get('ellipse_area', 0):.1f}", 'ms²'],
+        [metrics.get('entropy_type', 'Entropy'), en_str, 'nats']
+    ]
+    
+    nl_table = Table(nl_data, colWidths=[200, 100, 100])
+    nl_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f1f5f9')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#0f172a')),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1'))
+    ]))
+    story.append(nl_table)
+    story.append(Spacer(1, 20))
+    
     # --- INTERPRETATION ---
     story.append(Paragraph("Clinical Interpretation", heading_style))
     for key, text in interpretations.items():

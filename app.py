@@ -1375,6 +1375,16 @@ It does not constitute medical advice. All findings should be evaluated by a qua
                     psd_path = os.path.join(tmp_dir, "psd.png")
                     fig_psd_pdf.write_image(psd_path)
                     plots_dict["Power Spectral Density (Welch)"] = psd_path
+                    
+                # 4. Non-Linear Poincaré Plot
+                if 'fig_pc' in locals():
+                    fig_pc_pdf = go.Figure(fig_pc)
+                    fig_pc_pdf.update_layout(width=600, height=600, paper_bgcolor='white', plot_bgcolor='white', font=dict(color='black'))
+                    fig_pc_pdf.update_xaxes(gridcolor='#e2e8f0', tickfont=dict(color='black'))
+                    fig_pc_pdf.update_yaxes(gridcolor='#e2e8f0', tickfont=dict(color='black'))
+                    pc_path = os.path.join(tmp_dir, "poincare.png")
+                    fig_pc_pdf.write_image(pc_path)
+                    plots_dict["Poincaré Plot (Non-Linear HRV)"] = pc_path
                 
                 # Generate PDF
                 pdf_path = os.path.join(tmp_dir, "ECG_HRV_Report.pdf")

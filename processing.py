@@ -308,6 +308,81 @@ def extract_rr_intervals(r_peaks: np.ndarray, fs: float,
     return rr[valid], times[valid]
 
 
+def detect_ectopic_beats(rr_intervals: np.ndarray, threshold: float = 0.20) -> np.ndarray:
+    """
+    Detect ectopic beats using a sliding window median filter.
+    An RR interval is considered ectopic if it deviates by more than `threshold`
+    (e.g., 20%) from the local median RR interval.
+
+    Parameters
+    ----------
+    rr_intervals : np.ndarray  – Valid RR intervals in seconds
+    threshold    : float       – Deviation threshold (default 20%)
+
+    Returns
+    -------
+    ectopic_indices : np.ndarray – Indices of detected ectopic beats
+    """
+    if len(rr_intervals) < 5:
+        return np.array([], dtype=int)
+
+    # Use a median filter of size 11 (or smaller if signal is short)
+    window_size = min(11, len(rr_intervals) | 1)  # Must be odd
+    if window_size < 3:
+        return np.array([], dtype=int)
+        
+    local_median = sp_signal.medfilt(rr_intervals, kernel_size=window_size)
+
+    # Calculate relative deviation
+    deviation = np.abs(rr_intervals - local_median) / local_median
+
+    # Find indices where deviation exceeds threshold
+    ectopic_indices = np.where(deviation > threshold)[0]
+    return ectopic_indices
+
+
+def interpolate_rr_intervals(rr_intervals: np.ndarray, ectopic_indices: np.ndarray, method: str = 'cubic') -> np.ndarray:
+    """
+    Replace ectopic beats using interpolation.
+
+    Parameters
+    ----------
+    rr_intervals    : np.ndarray  – Original RR intervals (seconds)
+    ectopic_indices : np.ndarray  – Indices of ectopic beats
+    method          : str         – Interpolation method ('linear' or 'cubic')
+
+    Returns
+    -------
+    nn_intervals : np.ndarray – Corrected normal-to-normal intervals
+    """
+    if len(ectopic_indices) == 0:
+        return rr_intervals.copy()
+
+    nn_intervals = rr_intervals.copy()
+    valid_indices = np.setdiff1d(np.arange(len(rr_intervals)), ectopic_indices)
+
+    if len(valid_indices) < 2:
+        return nn_intervals  # Not enough valid points to interpolate
+
+    valid_rr = rr_intervals[valid_indices]
+
+    from scipy.interpolate import interp1d
+    if method == 'cubic' and len(valid_indices) >= 4:
+        f = interp1d(valid_indices, valid_rr, kind='cubic', bounds_error=False, fill_value="extrapolate")
+    else:
+        f = interp1d(valid_indices, valid_rr, kind='linear', bounds_error=False, fill_value="extrapolate")
+
+    nn_intervals[ectopic_indices] = f(ectopic_indices)
+
+    # Ensure no negative or absurdly large interpolated values
+    mean_rr = np.mean(valid_rr)
+    nn_intervals[nn_intervals <= 0] = mean_rr
+    nn_intervals[nn_intervals > 2.0] = 2.0
+
+    return nn_intervals
+
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 4. TIME-DOMAIN HRV ANALYSIS
 # ─────────────────────────────────────────────────────────────────────────────
@@ -665,11 +740,15 @@ def full_hrv_analysis(ecg_raw: np.ndarray, fs: float,
 
     # ── RR Interval Extraction ────────────────────────────────────────────────
     rr_intervals, rr_times = extract_rr_intervals(r_peaks, fs)
+    
+    # ── Ectopic Beat Detection & Correction ───────────────────────────────────
+    ectopic_indices = detect_ectopic_beats(rr_intervals)
+    nn_intervals = interpolate_rr_intervals(rr_intervals, ectopic_indices, method='cubic')
 
     # ── HRV Analysis ──────────────────────────────────────────────────────────
-    time_metrics     = time_domain_hrv(rr_intervals)
-    freq_metrics     = frequency_domain_hrv(rr_intervals)
-    nonlinear_metrics = nonlinear_hrv(rr_intervals, entropy=entropy_type)
+    time_metrics     = time_domain_hrv(nn_intervals)
+    freq_metrics     = frequency_domain_hrv(nn_intervals)
+    nonlinear_metrics = nonlinear_hrv(nn_intervals, entropy=entropy_type)
 
     # Merge relevant metrics for interpretation layer
     combined = {}
@@ -685,6 +764,8 @@ def full_hrv_analysis(ecg_raw: np.ndarray, fs: float,
         'fs'                : fs,
         'r_peaks'           : r_peaks,
         'rr_intervals'      : rr_intervals,
+        'nn_intervals'      : nn_intervals,
+        'ectopic_indices'   : ectopic_indices,
         'rr_times'          : rr_times,
         'time_metrics'      : time_metrics,
         'freq_metrics'      : freq_metrics,

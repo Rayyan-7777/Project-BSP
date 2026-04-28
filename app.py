@@ -19,6 +19,7 @@ Version : 1.0
 # ─────────────────────────────────────────────────────────────────────────────
 # Imports
 # ─────────────────────────────────────────────────────────────────────────────
+import os
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -43,33 +44,62 @@ st.set_page_config(
     }
 )
 
-# ── Custom CSS  ───────────────────────────────────────────────────────────────
+# ── Theme Configuration ────────────────────────────────────────────────────────
+if "theme" not in st.session_state:
+    st.session_state.theme = "Dark"
+
+def set_theme():
+    if st.session_state.theme == "Light":
+        return """
+        :root {
+            --bg-primary    : #f8fafc;
+            --bg-card       : #ffffff;
+            --bg-card2      : #f1f5f9;
+            --accent-blue   : #2563eb;
+            --accent-cyan   : #0891b2;
+            --accent-green  : #059669;
+            --accent-purple : #7c3aed;
+            --accent-red    : #dc2626;
+            --accent-amber  : #d97706;
+            --text-primary  : #0f172a;
+            --text-secondary: #475569;
+            --border        : #e2e8f0;
+        }
+        .stApp { background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%); color: var(--text-primary); }
+        [data-testid="stSidebar"] { background: linear-gradient(180deg, #e2e8f0 0%, #ffffff 100%); border-right: 1px solid var(--border); }
+        .dashboard-header { background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #ffffff 100%); border: 1px solid #cbd5e1; }
+        """
+    else:
+        return """
+        :root {
+            --bg-primary    : #0a0e1a;
+            --bg-card       : #111827;
+            --bg-card2      : #1a2235;
+            --accent-blue   : #3b82f6;
+            --accent-cyan   : #06b6d4;
+            --accent-green  : #10b981;
+            --accent-purple : #8b5cf6;
+            --accent-red    : #ef4444;
+            --accent-amber  : #f59e0b;
+            --text-primary  : #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border        : #1e293b;
+        }
+        .stApp { background: linear-gradient(135deg, #0a0e1a 0%, #0d1424 50%, #0a0e1a 100%); color: var(--text-primary); }
+        [data-testid="stSidebar"] { background: linear-gradient(180deg, #0d1424 0%, #111827 100%); border-right: 1px solid var(--border); }
+        .dashboard-header { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); border: 1px solid #312e81; }
+        """
+
+st.markdown(f"<style>{set_theme()}</style>", unsafe_allow_html=True)
+
 st.markdown("""
 <style>
 /* ── Google Font ─────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/* ── Root theme ──────────────────────────────────────── */
-:root {
-    --bg-primary    : #0a0e1a;
-    --bg-card       : #111827;
-    --bg-card2      : #1a2235;
-    --accent-blue   : #3b82f6;
-    --accent-cyan   : #06b6d4;
-    --accent-green  : #10b981;
-    --accent-purple : #8b5cf6;
-    --accent-red    : #ef4444;
-    --accent-amber  : #f59e0b;
-    --text-primary  : #f1f5f9;
-    --text-secondary: #94a3b8;
-    --border        : #1e293b;
-}
-
 /* ── App background ──────────────────────────────────── */
 .stApp {
-    background: linear-gradient(135deg, #0a0e1a 0%, #0d1424 50%, #0a0e1a 100%);
     font-family: 'Inter', sans-serif;
-    color: var(--text-primary);
 }
 
 /* ── Sidebar ─────────────────────────────────────────── */
@@ -171,8 +201,6 @@ st.markdown("""
 
 /* ── Header banner ───────────────────────────────────── */
 .dashboard-header {
-    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-    border: 1px solid #312e81;
     border-radius: 16px;
     padding: 24px 32px;
     margin-bottom: 24px;
@@ -266,24 +294,24 @@ st.markdown("""
 # Coloring constants for Plotly charts
 # ─────────────────────────────────────────────────────────────────────────────
 PLOTLY_LAYOUT = dict(
-    paper_bgcolor='rgba(10,14,26,0)',
-    plot_bgcolor='rgba(17,24,39,0.6)',
-    font=dict(family='Inter', color='#94a3b8', size=12),
-    title_font=dict(family='Inter', color='#f1f5f9', size=15),
+    paper_bgcolor='rgba(0,0,0,0)',
+    plot_bgcolor='rgba(0,0,0,0)',
+    font=dict(family='Inter', color= '#475569' if st.session_state.theme == 'Light' else '#94a3b8', size=12),
+    title_font=dict(family='Inter', color= '#0f172a' if st.session_state.theme == 'Light' else '#f1f5f9', size=15),
     xaxis=dict(
-        gridcolor='#1e293b', gridwidth=1,
-        zerolinecolor='#1e293b',
-        tickfont=dict(color='#94a3b8', size=11),
+        gridcolor='#e2e8f0' if st.session_state.theme == 'Light' else '#1e293b', gridwidth=1,
+        zerolinecolor='#e2e8f0' if st.session_state.theme == 'Light' else '#1e293b',
+        tickfont=dict(color='#475569' if st.session_state.theme == 'Light' else '#94a3b8', size=11),
     ),
     yaxis=dict(
-        gridcolor='#1e293b', gridwidth=1,
-        zerolinecolor='#1e293b',
-        tickfont=dict(color='#94a3b8', size=11),
+        gridcolor='#e2e8f0' if st.session_state.theme == 'Light' else '#1e293b', gridwidth=1,
+        zerolinecolor='#e2e8f0' if st.session_state.theme == 'Light' else '#1e293b',
+        tickfont=dict(color='#475569' if st.session_state.theme == 'Light' else '#94a3b8', size=11),
     ),
     legend=dict(
-        bgcolor='rgba(17,24,39,0.8)',
-        bordercolor='#1e293b', borderwidth=1,
-        font=dict(color='#94a3b8', size=11),
+        bgcolor='rgba(255,255,255,0.8)' if st.session_state.theme == 'Light' else 'rgba(17,24,39,0.8)',
+        bordercolor='#e2e8f0' if st.session_state.theme == 'Light' else '#1e293b', borderwidth=1,
+        font=dict(color='#475569' if st.session_state.theme == 'Light' else '#94a3b8', size=11),
     ),
     margin=dict(l=50, r=30, t=50, b=50),
     hovermode='x unified',
@@ -337,6 +365,15 @@ with st.sidebar:
         <div style='font-size:12px; font-weight:500; color:#64748b; margin-top:2px; letter-spacing: 1px; text-transform: uppercase;'>BSP Lab OEL</div>
     </div>
     """, unsafe_allow_html=True)
+    st.divider()
+
+    # ── Theme Toggle ──────────────────────────────────────────────────────────
+    st.markdown("### 🎨 Appearance")
+    theme_choice = st.radio("Theme", ["Dark", "Light"], horizontal=True, key="theme_radio", 
+                            index=0 if st.session_state.theme == "Dark" else 1)
+    if theme_choice != st.session_state.theme:
+        st.session_state.theme = theme_choice
+        st.rerun()
     st.divider()
 
     # ── Data Source ───────────────────────────────────────────────────────────
@@ -521,6 +558,8 @@ with st.spinner("⚙️ Running ECG-HRV analysis pipeline..."):
 ecg_clean   = results['ecg_clean']
 r_peaks     = results['r_peaks']
 rr_intervals= results['rr_intervals']
+nn_intervals= results.get('nn_intervals', rr_intervals)
+ectopic_indices = results.get('ectopic_indices', [])
 rr_times    = results['rr_times']
 time_m      = results['time_metrics']
 freq_m      = results['freq_metrics']
@@ -688,41 +727,64 @@ with tabs[1]:
         st.warning("⚠️ Not enough RR intervals detected. Try adjusting filter settings or detection method.")
     else:
         rr_ms_arr = rr_intervals * 1000.0
+        nn_ms_arr = nn_intervals * 1000.0
 
         fig_tacho = make_subplots(
             rows=2, cols=1,
             row_heights=[0.65, 0.35],
             vertical_spacing=0.10,
             shared_xaxes=False,
-            subplot_titles=["RR Interval Tachogram", "RR Interval Distribution (Histogram)"]
+            subplot_titles=["RR Interval Tachogram (with Ectopic Correction)", "NN Interval Distribution (Histogram)"]
         )
 
-        # ── Tachogram line ────────────────────────────────────────────────────
+        # ── Tachogram line (Raw RR) ───────────────────────────────────────────
         fig_tacho.add_trace(
             go.Scatter(
                 x=rr_times, y=rr_ms_arr,
-                name='RR Interval',
-                line=dict(color=COLOR_RR, width=2),
-                fill='tozeroy',
-                fillcolor='rgba(6,182,212,0.08)',
-                hovertemplate='Time: %{x:.2f}s<br>RR: %{y:.1f} ms<extra></extra>'
+                name='Raw RR Interval',
+                line=dict(color='rgba(148, 163, 184, 0.5)', width=2),
+                hovertemplate='Time: %{x:.2f}s<br>Raw RR: %{y:.1f} ms<extra></extra>'
             ), row=1, col=1
         )
 
-        # Mean RR line
-        mean_rr_ms = float(np.mean(rr_ms_arr))
+        # ── Tachogram line (Corrected NN) ─────────────────────────────────────
+        fig_tacho.add_trace(
+            go.Scatter(
+                x=rr_times, y=nn_ms_arr,
+                name='Corrected NN Interval',
+                line=dict(color=COLOR_RR, width=2),
+                fill='tozeroy',
+                fillcolor='rgba(6,182,212,0.08)',
+                hovertemplate='Time: %{x:.2f}s<br>NN: %{y:.1f} ms<extra></extra>'
+            ), row=1, col=1
+        )
+
+        # ── Highlight Ectopic Beats ───────────────────────────────────────────
+        if len(ectopic_indices) > 0:
+            fig_tacho.add_trace(
+                go.Scatter(
+                    x=rr_times[ectopic_indices], y=rr_ms_arr[ectopic_indices],
+                    name='Ectopic Beats',
+                    mode='markers',
+                    marker=dict(color='red', size=8, symbol='x'),
+                    hovertemplate='Time: %{x:.2f}s<br>Ectopic RR: %{y:.1f} ms<extra></extra>'
+                ), row=1, col=1
+            )
+
+        # Mean NN line
+        mean_nn_ms = float(np.mean(nn_ms_arr))
         fig_tacho.add_hline(
-            y=mean_rr_ms, line_color='#f59e0b',
+            y=mean_nn_ms, line_color='#f59e0b',
             line_dash='dash', line_width=1.5,
-            annotation_text=f"Mean = {mean_rr_ms:.1f} ms",
+            annotation_text=f"Mean NN = {mean_nn_ms:.1f} ms",
             annotation_font_color='#f59e0b',
             row=1, col=1
         )
 
         # ±1 SD band
-        sd_rr = float(np.std(rr_ms_arr, ddof=1))
+        sd_nn = float(np.std(nn_ms_arr, ddof=1))
         fig_tacho.add_hrect(
-            y0=mean_rr_ms - sd_rr, y1=mean_rr_ms + sd_rr,
+            y0=mean_nn_ms - sd_nn, y1=mean_nn_ms + sd_nn,
             fillcolor='rgba(245,158,11,0.05)',
             line_color='rgba(245,158,11,0.3)', line_width=1, line_dash='dot',
             row=1, col=1
@@ -731,13 +793,13 @@ with tabs[1]:
         # ── Histogram ─────────────────────────────────────────────────────────
         fig_tacho.add_trace(
             go.Histogram(
-                x=rr_ms_arr, nbinsx=30,
-                name='RR Distribution',
+                x=nn_ms_arr, nbinsx=30,
+                name='NN Distribution',
                 marker=dict(
                     color='rgba(6,182,212,0.6)',
                     line=dict(color='rgba(6,182,212,0.9)', width=1)
                 ),
-                hovertemplate='RR: %{x:.0f} ms<br>Count: %{y}<extra></extra>'
+                hovertemplate='NN: %{x:.0f} ms<br>Count: %{y}<extra></extra>'
             ), row=2, col=1
         )
 
@@ -1270,6 +1332,67 @@ It does not constitute medical advice. All findings should be evaluated by a qua
                 file_name="hrv_analysis_report.csv",
                 mime="text/csv"
             )
+
+    # ── PDF Report Generation ──────────────────────────────────────────────
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("### 📄 Export PDF Medical Report")
+    st.markdown("Generate a comprehensive, clinical-grade PDF report containing all analysis results and visual plots.")
+    
+    if st.button("Download Professional PDF Report", type="primary"):
+        with st.spinner("Generating high-quality PDF report... (This may take a moment to render plots)"):
+            import tempfile
+            from report_generator import generate_pdf_report
+            
+            try:
+                # Save plots as images
+                plots_dict = {}
+                tmp_dir = tempfile.mkdtemp()
+                
+                # 1. ECG Signal (First 10 seconds)
+                fig_ecg_pdf = go.Figure(fig_ecg)
+                fig_ecg_pdf.update_layout(width=800, height=400, paper_bgcolor='white', plot_bgcolor='white', font=dict(color='black'))
+                fig_ecg_pdf.update_xaxes(gridcolor='#e2e8f0', zerolinecolor='#e2e8f0', tickfont=dict(color='black'))
+                fig_ecg_pdf.update_yaxes(gridcolor='#e2e8f0', zerolinecolor='#e2e8f0', tickfont=dict(color='black'))
+                ecg_path = os.path.join(tmp_dir, "ecg.png")
+                fig_ecg_pdf.write_image(ecg_path)
+                plots_dict["ECG Signal Segment"] = ecg_path
+                
+                # 2. Tachogram
+                fig_tacho_pdf = go.Figure(fig_tacho)
+                fig_tacho_pdf.update_layout(width=800, height=500, paper_bgcolor='white', plot_bgcolor='white', font=dict(color='black'))
+                fig_tacho_pdf.update_xaxes(gridcolor='#e2e8f0', tickfont=dict(color='black'))
+                fig_tacho_pdf.update_yaxes(gridcolor='#e2e8f0', tickfont=dict(color='black'))
+                tacho_path = os.path.join(tmp_dir, "tacho.png")
+                fig_tacho_pdf.write_image(tacho_path)
+                plots_dict["RR Interval Tachogram & Distribution"] = tacho_path
+                
+                # 3. Frequency Spectrum
+                if 'fig_psd' in locals():
+                    fig_psd_pdf = go.Figure(fig_psd)
+                    fig_psd_pdf.update_layout(width=800, height=400, paper_bgcolor='white', plot_bgcolor='white', font=dict(color='black'))
+                    fig_psd_pdf.update_xaxes(gridcolor='#e2e8f0', tickfont=dict(color='black'))
+                    fig_psd_pdf.update_yaxes(gridcolor='#e2e8f0', tickfont=dict(color='black'))
+                    psd_path = os.path.join(tmp_dir, "psd.png")
+                    fig_psd_pdf.write_image(psd_path)
+                    plots_dict["Power Spectral Density (Welch)"] = psd_path
+                
+                # Generate PDF
+                pdf_path = os.path.join(tmp_dir, "ECG_HRV_Report.pdf")
+                generate_pdf_report(combined, interpretations, plots_dict, pdf_path)
+                
+                with open(pdf_path, "rb") as pdf_file:
+                    st.download_button(
+                        label="⬇ Click Here to Download PDF",
+                        data=pdf_file,
+                        file_name="ECG_HRV_Report.pdf",
+                        mime="application/pdf",
+                        key="download_pdf_final"
+                    )
+                st.success("PDF Generated Successfully!")
+                
+            except Exception as e:
+                st.error(f"Failed to generate PDF: {e}")
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -24,5 +24,5 @@ This project is an interactive dashboard for ECG signal processing and HRV analy
 
 <img width="940" height="538" alt="image" src="https://github.com/user-attachments/assets/a9fa46c0-0dba-424f-b4b3-c9e619c5abf1" />
 
-![Uploading image.png…]()
+<img width="940" height="466" alt="image" src="https://github.com/user-attachments/assets/211a5429-ee62-4915-af5d-d5eae8545321" />
 
